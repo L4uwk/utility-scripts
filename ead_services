@@ -2,45 +2,41 @@
 
 ACTION=$1
 DATE=$(date +"%x %r %Z")
-	
+
 # Moreno's ID's #
 function getPIDs {
-	MONGO_PID=$(ps -ef | awk '/[m]ongod/{print $2}')
-	ES_PID=$(ps -ef | awk '/[e]lasticsearch/{print $2}')
-	REDIS_PID=$(ps -ef | awk '/[r]edis/{print $2}')
+  MONGO_PID=$(ps -ef | awk '/[m]ongod/{print $2}')
+  ES_PID=$(ps -ef | awk '/[e]lasticsearch/{print $2}')
+  REDIS_PID=$(ps -ef | awk '/[r]edis/{print $2}')
 }
 # Do the shit #
 function services {
-	systemctl $ACTION mongodb.service
-        systemctl $ACTION redis.service
-	systemctl $ACTION elasticsearch.service
+  systemctl $ACTION mongodb.service
+  systemctl $ACTION redis.service
+  systemctl $ACTION elasticsearch.service
 
+  getPIDs
+  echo -e "PIDs:\tMongoDB: $MONGO_PID | Redis: $REDIS_PID | ElasticSearch: $ES_PID"
 }
 
 # Check if parameters are acceptable #
-if [ "$ACTION" != "start" ] && [ "$ACTION" != "stop" ];
-then
-	echo "Wrong Parameters! [ Use: start || stop ]"
-	exit 1;
+if [ "$ACTION" != "start" ] && [ "$ACTION" != "stop" ]; then
+  echo "Wrong Parameters! [Use: start || stop || restart]"
+  exit 1;
+else
+  echo "$DATE"
+  getPIDs
 
-else  
-	echo "$DATE"
-	getPIDs
-	# Check if the services are already running - Change the $ACTION to restart if true #
-	if [ "$ACTION" == "start" ] && [ ! -z "$MONGO_PID" ] && [ ! -z "$REDIS_PID" ] && [ ! -z "$ES_PID" ];
-	then
-		echo "--- restart script ---"
-		ACTION="restart"
-		services $ACTION
-		getPIDs
-		echo -e "PIDs:\tMongoDB: $MONGO_PID | Redis: $REDIS_PID | ElasticSearch: $ES_PID" 
-		exit 0;
-	# Start/Stop Services #
-	else
-		echo "--- $ACTION script ---"
-                services $ACTION
-		getPIDs
-		echo -e "PIDs:\tMongoDB: $MONGO_PID | Redis: $REDIS_PID | ElasticSearch: $ES_PID"
-		exit 0;
-	fi
+  # Check if the services are already runnig - if true restart them #
+  if [ "$ACTION" == "start" ] && [ ! -z "$MONGO_PID" ] && [ ! -z "$REDIS_PID" ] && [ ! -z "$ES_PID" ]; then
+    echo "--- restart script ---"
+    ACTION="restart"
+    services $ACTION $MONGO_PID $REDIS_PID $ES_PID
+    exit 0;
+  # Start/Stop Services #
+  else
+    echo "--- $ACTION script ---"
+    services $ACTION $MONGO_PID $REDIS_PID $ES_PID
+    exit 0;
+  fi
 fi
