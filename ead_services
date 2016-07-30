@@ -3,12 +3,13 @@
 ACTION=$1
 DATE=$(date +"%x %r %Z")
 
+# Moreno's ID's #
 function getPIDs {
   MONGO_PID=$(ps -ef | awk '/[m]ongod/{print $2}')
   ES_PID=$(ps -ef | awk '/[e]lasticsearch/{print $2}')
   REDIS_PID=$(ps -ef | awk '/[r]edis/{print $2}')
 }
-
+# Do the shit #
 function services {
   systemctl $ACTION mongodb.service
   systemctl $ACTION redis.service
